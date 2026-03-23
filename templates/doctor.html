@@ -1,0 +1,200 @@
+﻿<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+  <title>Doctor Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="dark"] {
+      --bg-primary: #0a0f1e; --bg-secondary: #111827; --bg-card: #1a2235;
+      --bg-hover: #1f2d44; --border: #2a3a52; --text-primary: #f0f4ff;
+      --text-secondary: #8899b4; --text-muted: #4a5a72; --accent: #3b82f6;
+      --green: #10b981; --yellow: #f59e0b; --red: #ef4444; --purple: #8b5cf6;
+    }
+    :root[data-theme="light"] {
+      --bg-primary: #f0f4ff; --bg-secondary: #e8eef8; --bg-card: #ffffff;
+      --bg-hover: #f5f8ff; --border: #d0daea; --text-primary: #0f172a;
+      --text-secondary: #4a5a72; --text-muted: #8899b4; --accent: #3b82f6;
+      --green: #059669; --yellow: #d97706; --red: #dc2626; --purple: #7c3aed;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+    nav { background: var(--bg-secondary); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .logo { width: 32px; height: 32px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    nav h1 { font-size: 1rem; font-weight: 600; }
+    nav span { font-size: 0.7rem; color: var(--text-secondary); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .dept-badge { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--green); padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 500; }
+    .theme-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    .logout-btn { font-size: 0.8rem; color: var(--text-secondary); text-decoration: none; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); }
+    .logout-btn:hover { color: var(--red); border-color: var(--red); }
+    .main { padding: 1.5rem 2rem; max-width: 1200px; margin: 0 auto; }
+    .welcome { background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .welcome h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
+    .welcome p { font-size: 0.82rem; color: var(--text-secondary); }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .metric { background: var(--bg-card); border-radius: 14px; padding: 1.2rem; border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .metric::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 14px 14px 0 0; }
+    .metric.blue::before { background: var(--accent); }
+    .metric.red::before { background: var(--red); }
+    .metric.yellow::before { background: var(--yellow); }
+    .metric-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 0.8rem; }
+    .metric.blue .metric-icon { background: rgba(59,130,246,0.12); }
+    .metric.red .metric-icon { background: rgba(239,68,68,0.12); }
+    .metric.yellow .metric-icon { background: rgba(245,158,11,0.12); }
+    .metric .label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+    .metric .value { font-size: 2rem; font-weight: 700; }
+    .metric.blue .value { color: var(--accent); }
+    .metric.red .value { color: var(--red); }
+    .metric.yellow .value { color: var(--yellow); }
+    .panel { background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.2rem; }
+    .panel-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { font-size: 0.88rem; font-weight: 600; }
+    .panel-sub { font-size: 0.75rem; color: var(--text-secondary); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { color: var(--text-muted); font-weight: 500; text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+    td:first-child { color: var(--text-primary); font-weight: 500; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg-hover); }
+    .badge { padding: 3px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+    .badge.red { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    .badge.red::before { background: var(--red); }
+    .badge.yellow { background: rgba(245,158,11,0.12); color: var(--yellow); border: 1px solid rgba(245,158,11,0.25); }
+    .badge.yellow::before { background: var(--yellow); }
+    .badge.green { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+    .badge.green::before { background: var(--green); }
+    .badge.waiting { background: rgba(59,130,246,0.12); color: var(--accent); border: 1px solid rgba(59,130,246,0.25); }
+    .badge.waiting::before { background: var(--accent); }
+    .badge.in_treatment { background: rgba(139,92,246,0.12); color: var(--purple); border: 1px solid rgba(139,92,246,0.25); }
+    .badge.in_treatment::before { background: var(--purple); }
+    .action-btn { padding: 5px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+    .btn-treat { background: rgba(59,130,246,0.12); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+    .btn-treat:hover { background: var(--accent); color: white; }
+    .btn-discharge { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+    .btn-discharge:hover { background: var(--green); color: white; }
+    .live { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--green); }
+    .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .empty { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.82rem; }
+    .alert-item { padding: 0.8rem 1rem; border-radius: 10px; margin-bottom: 0.5rem; border-left: 3px solid; }
+    .alert-item.high { background: rgba(239,68,68,0.07); border-color: var(--red); }
+    .alert-item.medium { background: rgba(245,158,11,0.07); border-color: var(--yellow); }
+    .alert-item.low { background: rgba(16,185,129,0.07); border-color: var(--green); }
+    .alert-title { font-size: 0.83rem; font-weight: 500; color: var(--text-primary); }
+    .alert-dept { font-size: 0.73rem; color: var(--text-muted); margin-top: 2px; }
+    @media(max-width:768px){ .metrics { grid-template-columns: 1fr 1fr; } .main { padding: 1rem; } }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand">
+    <div class="logo">👨‍⚕️</div>
+    <div>
+      <h1>Doctor Dashboard</h1>
+      <span>Hospital Ops</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span class="dept-badge">{{ staff.department }}</span>
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-icon">☀️</button>
+    <a href="/logout/" class="logout-btn">Logout</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="welcome">
+    <div>
+      <h2>Good day, {{ staff.name }}</h2>
+      <p>{{ staff.role|title }} · {{ staff.department }} Department · Here is your patient queue for today</p>
+    </div>
+    <div class="live"><div class="dot"></div> Live updates</div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric blue">
+      <div class="metric-icon">👥</div>
+      <div class="label">My Patients</div>
+      <div class="value" id="doc-total">{{ my_patients.count }}</div>
+    </div>
+    <div class="metric red">
+      <div class="metric-icon">🚨</div>
+      <div class="label">Waiting</div>
+      <div class="value" id="doc-waiting">{{ waiting_count }}</div>
+    </div>
+    <div class="metric yellow">
+      <div class="metric-icon">⚠️</div>
+      <div class="label">Dept Alerts</div>
+      <div class="value">{{ dept_alerts.count }}</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">My Patient Queue</div>
+        <div class="panel-sub">{{ staff.department }} department — sorted by wait time</div>
+      </div>
+      <div class="live"><div class="dot"></div> updating</div>
+    </div>
+    <table>
+      <thead><tr><th>Patient</th><th>Age</th><th>Zone</th><th>Wait Time</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="doc-patient-table">
+        {% for p in my_patients %}
+        <tr>
+          <td>{{ p.name }}</td>
+          <td>{{ p.age }}</td>
+          <td><span class="badge {{ p.zone }}">{{ p.zone|upper }}</span></td>
+          <td style="{% if p.wait_minutes > 30 %}color:var(--red);font-weight:600{% endif %}">{{ p.wait_minutes }} min</td>
+          <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+          <td>
+            {% if p.status == 'waiting' %}
+            <a href="/doctor/treat/{{ p.id }}/" class="action-btn btn-treat">Start Treatment</a>
+            {% elif p.status == 'in_treatment' %}
+            <a href="/doctor/discharge/{{ p.id }}/" class="action-btn btn-discharge">Discharge</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="empty">No patients in your queue</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if dept_alerts %}
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Department Alerts</div>
+    </div>
+    <div style="padding:1rem">
+      {% for alert in dept_alerts %}
+      <div class="alert-item {{ alert.severity }}">
+        <div class="alert-title">{{ alert.title }}</div>
+        <div class="alert-dept">{{ alert.department }} · {{ alert.severity|upper }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+}
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+});
+setInterval(() => { location.reload(); }, 30000);
+</script>
+</body>
+</html>

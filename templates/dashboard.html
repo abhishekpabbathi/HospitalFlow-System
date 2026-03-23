@@ -1,0 +1,428 @@
+﻿<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+  <title>Hospital Ops Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="dark"] {
+      --bg-primary: #0a0f1e;
+      --bg-secondary: #111827;
+      --bg-card: #1a2235;
+      --bg-hover: #1f2d44;
+      --border: #2a3a52;
+      --text-primary: #f0f4ff;
+      --text-secondary: #8899b4;
+      --text-muted: #4a5a72;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-glow: rgba(59,130,246,0.15);
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --nav-bg: rgba(10,15,30,0.95);
+    }
+    :root[data-theme="light"] {
+      --bg-primary: #f0f4ff;
+      --bg-secondary: #e8eef8;
+      --bg-card: #ffffff;
+      --bg-hover: #f5f8ff;
+      --border: #d0daea;
+      --text-primary: #0f172a;
+      --text-secondary: #4a5a72;
+      --text-muted: #8899b4;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-glow: rgba(59,130,246,0.1);
+      --green: #059669;
+      --yellow: #d97706;
+      --red: #dc2626;
+      --purple: #7c3aed;
+      --nav-bg: rgba(240,244,255,0.95);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); transition: background 0.3s, color 0.3s; min-height: 100vh; }
+
+    /* NAV */
+    nav { background: var(--nav-bg); backdrop-filter: blur(12px); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-brand .logo { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .nav-brand h1 { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+    .nav-brand span { font-size: 0.7rem; color: var(--text-secondary); font-weight: 400; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 99px; font-size: 0.72rem; color: var(--green); font-weight: 500; }
+    .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+    .theme-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .theme-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .user-chip { display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border); padding: 5px 12px; border-radius: 99px; font-size: 0.8rem; color: var(--text-secondary); }
+    .user-avatar { width: 22px; height: 22px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; color: white; }
+    .logout-btn { font-size: 0.8rem; color: var(--text-secondary); text-decoration: none; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s; }
+    .logout-btn:hover { background: var(--bg-hover); color: var(--red); border-color: var(--red); }
+
+    /* MAIN */
+    .main { padding: 1.5rem 2rem; max-width: 1400px; margin: 0 auto; }
+    .page-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .page-sub { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+    /* METRICS */
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media(max-width:900px){ .metrics { grid-template-columns: repeat(2,1fr); } }
+    .metric { background: var(--bg-card); border-radius: 14px; padding: 1.2rem 1.4rem; border: 1px solid var(--border); position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; cursor: default; }
+    .metric:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .metric::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 14px 14px 0 0; }
+    .metric.blue::before { background: var(--accent); }
+    .metric.red::before { background: var(--red); }
+    .metric.yellow::before { background: var(--yellow); }
+    .metric.green::before { background: var(--green); }
+    .metric-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 0.8rem; }
+    .metric.blue .metric-icon { background: rgba(59,130,246,0.12); }
+    .metric.red .metric-icon { background: rgba(239,68,68,0.12); }
+    .metric.yellow .metric-icon { background: rgba(245,158,11,0.12); }
+    .metric.green .metric-icon { background: rgba(16,185,129,0.12); }
+    .metric .label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+    .metric .value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .metric.blue .value { color: var(--accent); }
+    .metric.red .value { color: var(--red); }
+    .metric.yellow .value { color: var(--yellow); }
+    .metric.green .value { color: var(--green); }
+
+    /* GRID */
+    .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.2rem; margin-bottom: 1.2rem; }
+    @media(max-width:900px){ .grid { grid-template-columns: 1fr; } }
+
+    /* PANEL */
+    .panel { background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+    .panel-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
+    .panel-sub { font-size: 0.75rem; color: var(--text-secondary); }
+    .panel-body { padding: 1rem; }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { color: var(--text-muted); font-weight: 500; text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+    td:first-child { color: var(--text-primary); font-weight: 500; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.15s; }
+    tbody tr:hover td { background: var(--bg-hover); }
+
+    /* BADGES */
+    .badge { padding: 3px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+    .badge.red { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    .badge.red::before { background: var(--red); }
+    .badge.yellow { background: rgba(245,158,11,0.12); color: var(--yellow); border: 1px solid rgba(245,158,11,0.25); }
+    .badge.yellow::before { background: var(--yellow); }
+    .badge.green { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+    .badge.green::before { background: var(--green); }
+    .badge.waiting { background: rgba(59,130,246,0.12); color: var(--accent); border: 1px solid rgba(59,130,246,0.25); }
+    .badge.waiting::before { background: var(--accent); }
+    .badge.in_treatment { background: rgba(139,92,246,0.12); color: var(--purple); border: 1px solid rgba(139,92,246,0.25); }
+    .badge.in_treatment::before { background: var(--purple); }
+    .badge.high { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    .badge.high::before { background: var(--red); }
+    .badge.medium { background: rgba(245,158,11,0.12); color: var(--yellow); border: 1px solid rgba(245,158,11,0.25); }
+    .badge.medium::before { background: var(--yellow); }
+    .badge.low { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+    .badge.low::before { background: var(--green); }
+
+    /* ALERTS */
+    .alert-item { padding: 0.8rem 1rem; border-radius: 10px; margin-bottom: 0.5rem; border-left: 3px solid; display: flex; justify-content: space-between; align-items: flex-start; transition: background 0.15s; }
+    .alert-item:hover { filter: brightness(1.1); }
+    .alert-item.high { background: rgba(239,68,68,0.07); border-color: var(--red); }
+    .alert-item.medium { background: rgba(245,158,11,0.07); border-color: var(--yellow); }
+    .alert-item.low { background: rgba(16,185,129,0.07); border-color: var(--green); }
+    .alert-title { font-size: 0.83rem; font-weight: 500; color: var(--text-primary); margin-bottom: 3px; }
+    .alert-dept { font-size: 0.73rem; color: var(--text-muted); }
+
+    /* CHART ROW */
+    .bottom-grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 1.2rem; margin-bottom: 1.2rem; }
+    @media(max-width:900px){ .bottom-grid { grid-template-columns: 1fr; } }
+
+    /* CHATBOT */
+    #chatbot-btn { position: fixed; bottom: 24px; right: 24px; background: var(--accent); color: white; border: none; border-radius: 50%; width: 52px; height: 52px; font-size: 1.3rem; cursor: pointer; z-index: 200; box-shadow: 0 4px 20px var(--accent-glow); transition: transform 0.2s; }
+    #chatbot-btn:hover { transform: scale(1.08); }
+    #chatbot-box { position: fixed; bottom: 86px; right: 24px; width: 340px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); z-index: 200; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    #chatbot-box.open { display: flex; }
+    #chat-header { padding: 0.9rem 1rem; background: var(--bg-secondary); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .chat-header-info { display: flex; align-items: center; gap: 8px; }
+    .chat-avatar { width: 28px; height: 28px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .chat-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+    .chat-status { font-size: 0.7rem; color: var(--green); }
+    #chat-messages { height: 300px; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 8px; background: var(--bg-primary); }
+    #chat-messages::-webkit-scrollbar { width: 4px; }
+    #chat-messages::-webkit-scrollbar-track { background: transparent; }
+    #chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .msg { padding: 0.6rem 0.9rem; border-radius: 12px; font-size: 0.8rem; max-width: 88%; line-height: 1.6; white-space: pre-wrap; }
+    .msg.user { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg.bot { background: var(--bg-card); color: var(--text-secondary); align-self: flex-start; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    #chat-input-row { display: flex; gap: 8px; padding: 0.8rem; border-top: 1px solid var(--border); background: var(--bg-secondary); }
+    #chat-input { flex: 1; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; color: var(--text-primary); font-size: 0.82rem; font-family: 'Inter', sans-serif; outline: none; transition: border 0.2s; }
+    #chat-input:focus { border-color: var(--accent); }
+    #chat-input:disabled { opacity: 0.4; cursor: not-allowed; }
+    #chat-send { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.8rem; font-family: 'Inter', sans-serif; transition: background 0.2s; }
+    #chat-send:hover { background: var(--accent-hover); }
+    #chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* EMPTY STATE */
+    .empty { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.82rem; }
+
+    @media(max-width:768px){ .main { padding: 1rem; } nav { padding: 0 1rem; } }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand">
+    <div class="logo">🏥</div>
+    <div>
+      <h1>Hospital Ops</h1>
+      <span>Real-time operations dashboard</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="live-badge"><div class="dot"></div> Live</div>
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-icon">☀️</button>
+    <div class="user-chip">
+      <div class="user-avatar">{{ request.user.username|slice:":1"|upper }}</div>
+      {{ request.user.username }}
+    </div>
+    <a href="/logout/" class="logout-btn">Logout</a>
+  </div>
+</nav>
+
+<div class="main">
+  <p class="page-title">Operations Overview</p>
+  <p class="page-sub">Live hospital data — updates every 5 seconds</p>
+
+  <div class="metrics">
+    <div class="metric blue">
+      <div class="metric-icon">👥</div>
+      <div class="label">Total Patients</div>
+      <div class="value" id="stat-total">{{ total_patients }}</div>
+    </div>
+    <div class="metric red">
+      <div class="metric-icon">🚨</div>
+      <div class="label">Red Zone</div>
+      <div class="value" id="stat-red">{{ red_zone }}</div>
+    </div>
+    <div class="metric yellow">
+      <div class="metric-icon">⚠️</div>
+      <div class="label">Active Alerts</div>
+      <div class="value" id="stat-alerts">{{ active_alerts }}</div>
+    </div>
+    <div class="metric green">
+      <div class="metric-icon">👨‍⚕️</div>
+      <div class="label">Staff On Duty</div>
+      <div class="value">{{ staff_on_duty }}</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Patient Flow</div>
+          <div class="panel-sub">Active patients across all departments</div>
+        </div>
+        <div class="live-badge"><div class="dot"></div> updating</div>
+      </div>
+      <div style="padding:0">
+        <table>
+          <thead><tr><th>Patient</th><th>Zone</th><th>Department</th><th>Wait</th><th>Status</th></tr></thead>
+          <tbody id="patient-table">
+            {% for p in patients %}
+            <tr>
+              <td>{{ p.name }}</td>
+              <td><span class="badge {{ p.zone }}">{{ p.zone|upper }}</span></td>
+              <td>{{ p.department }}</td>
+              <td>{{ p.wait_minutes }} min</td>
+              <td><span class="badge {{ p.status }}">{{ p.get_status_display }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="empty">No active patients</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Active Alerts</div>
+          <div class="panel-sub" id="alert-count">{{ active_alerts }} unresolved</div>
+        </div>
+      </div>
+      <div class="panel-body" id="alerts-panel">
+        {% for alert in alerts %}
+        <div class="alert-item {{ alert.severity }}">
+          <div>
+            <div class="alert-title">{{ alert.title }}</div>
+            <div class="alert-dept">{{ alert.department }}</div>
+          </div>
+          <span class="badge {{ alert.severity }}">{{ alert.severity|upper }}</span>
+        </div>
+        {% empty %}
+        <div class="empty">No active alerts</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Zone Distribution</div>
+      </div>
+      <div class="panel-body" style="height:220px">
+        <canvas id="zoneChart"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Staff On Duty</div>
+          <div class="panel-sub">Currently active staff members</div>
+        </div>
+      </div>
+      <div style="padding:0">
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for s in staff %}
+            <tr>
+              <td>{{ s.name }}</td>
+              <td>{{ s.role|title }}</td>
+              <td>{{ s.department }}</td>
+              <td><span class="badge green">On Duty</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty">No staff on duty</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button id="chatbot-btn" onclick="toggleChat()">💬</button>
+<div id="chatbot-box">
+  <div id="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar">🤖</div>
+      <div>
+        <div class="chat-name">Hospital AI Assistant</div>
+        <div class="chat-status">● Online</div>
+      </div>
+    </div>
+    <button onclick="toggleChat()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;padding:4px">✕</button>
+  </div>
+  <div id="chat-messages">
+    <div class="msg bot">Hi! I have access to live hospital data. Ask me about patients, wait times, alerts or staff on duty.</div>
+  </div>
+  <div id="chat-input-row">
+    <input id="chat-input" type="text" placeholder="Ask about patients, alerts..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button id="chat-send" onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<script>
+// Theme
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  updateChartColors();
+}
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+});
+
+// Chart
+const ctx = document.getElementById('zoneChart').getContext('2d');
+const zoneChart = new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Red Zone', 'Yellow Zone', 'Green Zone'],
+    datasets: [{ data: [{{ red_zone }}, 0, {{ total_patients }}], backgroundColor: ['#ef4444','#f59e0b','#10b981'], borderWidth: 0, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '70%',
+    plugins: { legend: { position: 'bottom', labels: { color: '#8899b4', font: { family: 'Inter', size: 12 }, padding: 16, usePointStyle: true } } }
+  }
+});
+
+function updateChartColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  zoneChart.options.plugins.legend.labels.color = isDark ? '#8899b4' : '#4a5a72';
+  zoneChart.update();
+}
+
+// Live update
+setInterval(async () => {
+  try {
+    const res = await fetch('/api/live/');
+    const data = await res.json();
+    document.getElementById('stat-total').textContent = data.stats.total;
+    document.getElementById('stat-red').textContent = data.stats.red;
+    document.getElementById('stat-alerts').textContent = data.stats.active_alerts;
+    document.getElementById('alert-count').textContent = data.stats.active_alerts + ' unresolved';
+    const tbody = document.getElementById('patient-table');
+    tbody.innerHTML = data.patients.length === 0
+      ? '<tr><td colspan="5" class="empty">No active patients</td></tr>'
+      : data.patients.map(p => '<tr><td>'+p.name+'</td><td><span class="badge '+p.zone+'">'+p.zone.toUpperCase()+'</span></td><td>'+p.department+'</td><td>'+p.wait_minutes+' min</td><td><span class="badge '+p.status+'">'+p.status.replace('_',' ')+'</span></td></tr>').join('');
+    const ap = document.getElementById('alerts-panel');
+    ap.innerHTML = data.alerts.length === 0
+      ? '<div class="empty">No active alerts</div>'
+      : data.alerts.map(a => '<div class="alert-item '+a.severity+'"><div><div class="alert-title">'+a.title+'</div><div class="alert-dept">'+a.department+'</div></div><span class="badge '+a.severity+'">'+a.severity.toUpperCase()+'</span></div>').join('');
+    zoneChart.data.datasets[0].data = [data.stats.red, data.stats.yellow, data.stats.green];
+    zoneChart.update();
+  } catch(e) {}
+}, 5000);
+
+// Chatbot
+function toggleChat() { document.getElementById('chatbot-box').classList.toggle('open'); }
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-send');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  input.disabled = true;
+  btn.disabled = true;
+  btn.textContent = '...';
+  const messages = document.getElementById('chat-messages');
+  messages.innerHTML += '<div class="msg user">'+msg+'</div>';
+  const typingId = 'typing-'+Date.now();
+  messages.innerHTML += '<div class="msg bot" id="'+typingId+'">Thinking...</div>';
+  messages.scrollTop = messages.scrollHeight;
+  try {
+    const res = await fetch('/chatbot/ask/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+    document.getElementById(typingId).textContent = data.reply;
+  } catch(e) {
+    document.getElementById(typingId).textContent = 'Error connecting to AI service.';
+  }
+  input.disabled = false;
+  btn.disabled = false;
+  btn.textContent = 'Send';
+  input.focus();
+  messages.scrollTop = messages.scrollHeight;
+}
+function getCookie(name) { const v = document.cookie.match('(^|;) ?'+name+'=([^;]*)(;|$)'); return v ? v[2] : null; }
+</script>
+</body>
+</html>
