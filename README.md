@@ -1,4 +1,4 @@
-﻿# Hospital Ops Dashboard
+﻿# HospitalFlow System
 
 A real-time hospital operations dashboard inspired by SOPEONOW.
 
