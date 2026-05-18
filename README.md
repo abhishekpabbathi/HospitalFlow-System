@@ -18,8 +18,7 @@ A real-time hospital operations dashboard inspired by SOPEONOW.
 - Mobile responsive
 
 ## How to Run
-`ash
-git clone https://github.com/YOUR_USERNAME/hospital-ops-dashboard.git
+`
 cd hospital-ops-dashboard
 python -m venv venv
 venv\Scripts\activate
