@@ -28,8 +28,3 @@ python manage.py migrate
 python manage.py runserver
 `
 
-## Screenshots
-(Add screenshots here)
-
-## Inspired By
-SOPEONOW — Real-time healthcare operations intelligence platform
